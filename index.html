@@ -25,7 +25,7 @@
     }
 
     header {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(8px);
       color: #004d40;
       width: 100%;
@@ -36,26 +36,41 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
+    .instructions {
+      background: rgba(255,255,255,0.85);
+      border-radius: 10px;
+      padding: 15px 25px;
+      font-size: 1.1rem;
+      margin: 20px 0;
+      text-align: center;
+      line-height: 1.6;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
     main {
       flex: 1;
       width: 100%;
-      max-width: 800px;
-      padding: 20px;
+      max-width: 900px;
+      padding: 30px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
 
     textarea {
       width: 100%;
-      min-height: 160px;
+      min-height: 180px;
       border: 2px solid #ccc;
       border-radius: 12px;
-      padding: 14px;
-      font-size: 1rem;
+      padding: 16px;
+      font-size: 1.1rem;
       resize: vertical;
       outline: none;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255, 255, 255, 0.9);
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       transition: all 0.3s ease;
     }
@@ -76,7 +91,7 @@
       border: none;
       border-radius: 12px;
       padding: 14px;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       font-weight: 600;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
@@ -89,11 +104,15 @@
     }
 
     button:hover:enabled {
-      transform: translateY(-2px) scale(1.02);
+      transform: translateY(-2px) scale(1.05);
       box-shadow: 0 4px 14px rgba(0,0,0,0.2);
     }
 
-    /* Magical AI loading effect */
+    button:focus {
+      outline: none;
+      box-shadow: 0 0 12px rgba(33, 150, 243, 0.6);
+    }
+
     .loading::after {
       content: " •";
       animation: dots 1.5s steps(3, end) infinite;
@@ -116,6 +135,34 @@
       box-shadow: 0 0 18px rgba(0, 200, 150, 0.5);
     }
 
+    #copyBtn {
+      display: none;
+    }
+
+    #copyBtn.show {
+      display: inline-block;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.4s, transform 0.4s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     footer {
       padding: 1rem;
       text-align: center;
@@ -124,25 +171,58 @@
       background: rgba(255,255,255,0.85);
       width: 100%;
     }
+
+    .magic {
+      animation: scaleButton 0.3s ease forwards;
+    }
+
+    @keyframes scaleButton {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
   </style>
 </head>
 <body>
   <header>🤖 AI JSON Unescape Tool</header>
+  <div class="instructions">
+    👉 Paste your escaped JSON and press <b>Enter</b> to unescape.<br>
+    👉 Then click <b>Copy to Clipboard</b> to copy the result.<br>
+    ✨ (Auto-focus on text area when you open this tool!)
+  </div>
   <main>
     <textarea id="input" placeholder="Paste your escaped JSON string here..."></textarea>
     <button id="unescapeBtn" onclick="unescapeJSON()" disabled>✨ Unescape with AI</button>
     <textarea id="output" placeholder="Your unescaped JSON will appear here..." readonly></textarea>
+    <button id="copyBtn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
   </main>
   <footer>Made with ❤️ | AI-like experience on mobile & desktop</footer>
+
+  <!-- ✅ Toast element -->
+  <div id="toast" class="toast">✅ Copied successfully! Come again, we are ready to do 😎</div>
 
   <script>
     const inputBox = document.getElementById("input");
     const button = document.getElementById("unescapeBtn");
     const outputBox = document.getElementById("output");
+    const copyBtn = document.getElementById("copyBtn");
+    const toast = document.getElementById("toast");
+
+    // Auto focus on page load
+    window.onload = () => inputBox.focus();
 
     // Enable/disable button based on input
     inputBox.addEventListener("input", () => {
       button.disabled = inputBox.value.trim() === "";
+    });
+
+    // Press Enter to trigger unescape
+    inputBox.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey && !button.disabled) {
+        e.preventDefault();
+        unescapeJSON();
+      }
     });
 
     function unescapeJSON() {
@@ -151,6 +231,7 @@
       button.disabled = true;
       outputBox.value = "";
       outputBox.classList.remove("show");
+      copyBtn.classList.remove("show");
 
       setTimeout(() => {
         try {
@@ -158,6 +239,7 @@
           const unescaped = JSON.parse('"' + input.replace(/"/g, '\\"') + '"');
           outputBox.value = unescaped;
           outputBox.classList.add("show");
+          copyBtn.classList.add("show");
           button.textContent = "✨ Unescape with AI";
         } catch (e) {
           outputBox.value = "⚠️ Error: Invalid escaped JSON string";
@@ -166,7 +248,24 @@
         }
         button.classList.remove("loading");
         button.disabled = false;
-      }, 1500); // fake AI delay
+      }, 1200); // fake AI delay
+    }
+
+    function copyToClipboard() {
+      if (outputBox.value.trim() === "") return;
+      navigator.clipboard.writeText(outputBox.value).then(() => {
+        // Show magic effect on button
+        copyBtn.classList.add("magic");
+
+        // Change button text to "Copied!"
+        copyBtn.textContent = "✅ Copied!";
+        
+        setTimeout(() => {
+          copyBtn.textContent = "📋 Copy to Clipboard"; // Revert button text
+          toast.classList.add("show"); // Show success toast
+          setTimeout(() => toast.classList.remove("show"), 2000);
+        }, 1500); // Button text stays for 1.5 seconds before resetting
+      });
     }
   </script>
 </body>
