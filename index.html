@@ -6,7 +6,6 @@
   <title>AI JSON Unescape Tool</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Tailwind should be enough for most styling, but custom styles can still be added */
     .toast {
       position: fixed;
       bottom: 20px;
@@ -28,44 +27,43 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-gray-50 flex flex-col min-h-screen">
 
-  <!-- Header -->
-  <header class="w-full bg-blue-500 text-white py-6 text-center text-2xl font-medium shadow-lg">
+  <!-- Sticky Header -->
+  <header class="w-full bg-blue-500 text-white py-6 text-center text-2xl font-medium shadow-lg sticky top-0 z-50">
     AI JSON Unescape Tool
   </header>
 
-  <!-- Instructions Section -->
-  <div class="bg-white rounded-lg shadow-lg px-6 py-4 max-w-lg w-full mt-8 text-center text-gray-700">
-    <p class="text-sm">👉 Paste your escaped JSON and press <b>Enter</b> to unescape.<br>👉 Then click <b>Copy to Clipboard</b> to copy the result.<br>✨ (Auto-focus on text area when you open this tool!)</p>
-  </div>
+  <!-- Full-Screen Input -->
+  <main class="flex-1 flex flex-col items-center w-full">
+    <textarea 
+      id="input" 
+      placeholder="Paste your escaped JSON string here..." 
+      class="w-full flex-1 p-4 border-2 border-gray-300 rounded-none text-gray-700 text-base focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none">
+    </textarea>
 
-  <!-- Main content -->
-  <main class="mt-8 flex flex-col items-center w-full max-w-lg">
-    <!-- Input Area -->
-    <textarea id="input" placeholder="Paste your escaped JSON string here..." class="w-full p-4 border-2 border-gray-300 rounded-lg text-gray-700 text-base mb-6 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-    
-    <!-- Unescape Button -->
-    <button id="unescapeBtn" onclick="unescapeJSON()" class="w-full py-3 bg-blue-500 text-white rounded-lg text-lg font-medium transition-transform duration-300 hover:scale-105 focus:outline-none disabled:bg-gray-400" disabled>
-      ✨ Unescape with AI
-    </button>
+    <!-- Action Buttons -->
+    <div class="w-full p-4 bg-white shadow-md flex flex-col gap-4">
+      <button id="unescapeBtn" onclick="unescapeJSON()" class="w-full py-3 bg-blue-500 text-white rounded-lg text-lg font-medium transition-transform duration-300 hover:scale-105 focus:outline-none disabled:bg-gray-400" disabled>
+        ✨ Unescape with AI
+      </button>
 
-    <!-- Output Area -->
-    <textarea id="output" placeholder="Your unescaped JSON will appear here..." readonly class="w-full p-4 mt-6 border-2 border-gray-300 rounded-lg text-gray-700 text-base focus:outline-none resize-none" style="min-height: 150px;"></textarea>
+      <textarea 
+        id="output" 
+        placeholder="Your unescaped JSON will appear here..." 
+        readonly 
+        class="w-full p-4 border-2 border-gray-300 rounded-lg text-gray-700 text-base focus:outline-none resize-none" 
+        style="min-height: 150px;">
+      </textarea>
 
-    <!-- Copy Button -->
-    <button id="copyBtn" onclick="copyToClipboard()" class="w-full py-3 mt-4 bg-green-500 text-white rounded-lg text-lg font-medium transition-transform duration-300 hover:scale-105 focus:outline-none hidden">
-      📋 Copy to Clipboard
-    </button>
+      <button id="copyBtn" onclick="copyToClipboard()" class="w-full py-3 bg-green-500 text-white rounded-lg text-lg font-medium transition-transform duration-300 hover:scale-105 focus:outline-none hidden">
+        📋 Copy to Clipboard
+      </button>
+    </div>
   </main>
 
   <!-- Toast -->
   <div id="toast" class="toast">✅ Copied successfully! Come again, we are ready to do 😎</div>
-
-  <!-- Footer -->
-  <footer class="mt-8 text-center text-sm text-gray-600">
-    Made with ❤️ | AI-like experience on mobile & desktop
-  </footer>
 
   <script>
     const inputBox = document.getElementById("input");
@@ -118,18 +116,14 @@
     function copyToClipboard() {
       if (outputBox.value.trim() === "") return;
       navigator.clipboard.writeText(outputBox.value).then(() => {
-        // Show magic effect on button
         copyBtn.classList.add("transform", "scale-105");
-
-        // Change button text to "Copied!"
         copyBtn.textContent = "✅ Copied!";
-        
         setTimeout(() => {
-          copyBtn.textContent = "📋 Copy to Clipboard"; // Revert button text
+          copyBtn.textContent = "📋 Copy to Clipboard";
           copyBtn.classList.remove("transform", "scale-105");
-          toast.classList.add("show"); // Show success toast
+          toast.classList.add("show");
           setTimeout(() => toast.classList.remove("show"), 2000);
-        }, 1500); // Button text stays for 1.5 seconds before resetting
+        }, 1500);
       });
     }
   </script>
