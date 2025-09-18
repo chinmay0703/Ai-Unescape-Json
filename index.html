@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI JSON Unescape Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #a8edea, #d4fc79, #96e6a1);
+      background-size: 400% 400%;
+      animation: gradientShift 18s ease infinite;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      color: #222;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      color: #004d40;
+      width: 100%;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 1rem;
+      resize: vertical;
+      outline: none;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    textarea:hover {
+      border-color: #66bb6a;
+      box-shadow: 0 0 12px rgba(102, 187, 106, 0.4);
+    }
+
+    textarea:focus {
+      border-color: #2196f3;
+      box-shadow: 0 0 14px rgba(33, 150, 243, 0.6);
+    }
+
+    button {
+      background: linear-gradient(135deg, #6dd5ed, #2193b0);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    button:disabled {
+      background: #b0bec5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button:hover:enabled {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    /* Magical AI loading effect */
+    .loading::after {
+      content: " •";
+      animation: dots 1.5s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: " •"; }
+      40% { content: " ••"; }
+      60% { content: " •••"; }
+      100% { content: " •"; }
+    }
+
+    #output {
+      opacity: 0;
+      transition: opacity 0.8s ease, box-shadow 1s ease;
+    }
+
+    #output.show {
+      opacity: 1;
+      box-shadow: 0 0 18px rgba(0, 200, 150, 0.5);
+    }
+
+    footer {
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #333;
+      background: rgba(255,255,255,0.85);
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>🤖 AI JSON Unescape Tool</header>
+  <main>
+    <textarea id="input" placeholder="Paste your escaped JSON string here..."></textarea>
+    <button id="unescapeBtn" onclick="unescapeJSON()" disabled>✨ Unescape with AI</button>
+    <textarea id="output" placeholder="Your unescaped JSON will appear here..." readonly></textarea>
+  </main>
+  <footer>Made with ❤️ | AI-like experience on mobile & desktop</footer>
+
+  <script>
+    const inputBox = document.getElementById("input");
+    const button = document.getElementById("unescapeBtn");
+    const outputBox = document.getElementById("output");
+
+    // Enable/disable button based on input
+    inputBox.addEventListener("input", () => {
+      button.disabled = inputBox.value.trim() === "";
+    });
+
+    function unescapeJSON() {
+      button.textContent = "AI is working";
+      button.classList.add("loading");
+      button.disabled = true;
+      outputBox.value = "";
+      outputBox.classList.remove("show");
+
+      setTimeout(() => {
+        try {
+          const input = inputBox.value;
+          const unescaped = JSON.parse('"' + input.replace(/"/g, '\\"') + '"');
+          outputBox.value = unescaped;
+          outputBox.classList.add("show");
+          button.textContent = "✨ Unescape with AI";
+        } catch (e) {
+          outputBox.value = "⚠️ Error: Invalid escaped JSON string";
+          outputBox.classList.add("show");
+          button.textContent = "✨ Unescape with AI";
+        }
+        button.classList.remove("loading");
+        button.disabled = false;
+      }, 1500); // fake AI delay
+    }
+  </script>
+</body>
+</html>
