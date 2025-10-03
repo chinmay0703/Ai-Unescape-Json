@@ -19,6 +19,7 @@
       transform: translateY(40px);
       transition: opacity 0.4s, transform 0.4s;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      z-index: 100;
     }
     .toast.show {
       opacity: 1;
@@ -38,12 +39,24 @@
     <!-- Grid layout -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Input Area -->
-      <textarea id="input" placeholder="Paste your escaped JSON string here..." 
-        class="w-full h-80 p-4 border-2 border-gray-300 rounded-lg text-gray-700 text-base focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+      <div class="flex flex-col">
+        <textarea id="input" placeholder="Paste your escaped JSON string or SQL query here..." 
+          class="w-full h-80 p-4 border-2 border-gray-300 rounded-lg text-gray-700 text-base focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+        <button id="clearInput" onclick="clearInput()" 
+          class="mt-2 py-2 px-4 bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors duration-300 hover:bg-gray-500 focus:outline-none">
+          Clear Input
+        </button>
+      </div>
       
       <!-- Output Area -->
-      <textarea id="output" placeholder="Your unescaped JSON will appear here..." readonly 
-        class="w-full h-80 p-4 border-2 border-gray-300 rounded-lg text-gray-700 text-base focus:outline-none resize-none"></textarea>
+      <div class="flex flex-col">
+        <textarea id="output" placeholder="Your unescaped result will appear here..." readonly 
+          class="w-full h-80 p-4 border-2 border-gray-300 rounded-lg text-gray-700 text-base focus:outline-none resize-none"></textarea>
+        <button id="clearOutput" onclick="clearOutput()" 
+          class="mt-2 py-2 px-4 bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors duration-300 hover:bg-gray-500 focus:outline-none hidden">
+          Clear Output
+        </button>
+      </div>
     </div>
 
     <!-- Buttons under the grid -->
@@ -74,6 +87,7 @@
     const outputBox = document.getElementById("output");
     const copyBtn = document.getElementById("copyBtn");
     const toast = document.getElementById("toast");
+    const clearOutputBtn = document.getElementById("clearOutput");
 
     // Auto focus on page load
     window.onload = () => inputBox.focus();
@@ -83,52 +97,98 @@
       button.disabled = inputBox.value.trim() === "";
     });
 
-    // Press Enter to trigger unescape
+    // Press Enter to trigger unescape (Ctrl/Cmd + Enter for multiline)
     inputBox.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey && !button.disabled) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !button.disabled) {
         e.preventDefault();
         unescapeJSON();
       }
     });
 
+    function clearInput() {
+      inputBox.value = "";
+      button.disabled = true;
+      inputBox.focus();
+    }
+
+    function clearOutput() {
+      outputBox.value = "";
+      outputBox.classList.remove("bg-green-100", "text-green-700", "bg-red-100", "text-red-700", "opacity-100");
+      copyBtn.classList.add("hidden");
+      clearOutputBtn.classList.add("hidden");
+    }
+
+    function unescapeString(str) {
+      // Replace all escape sequences with their actual characters
+      return str
+        .replace(/\\n/g, '\n')      // newlines
+        .replace(/\\r/g, '\r')      // carriage returns
+        .replace(/\\t/g, '\t')      // tabs
+        .replace(/\\"/g, '"')       // escaped quotes
+        .replace(/\\'/g, "'")       // escaped single quotes
+        .replace(/\\b/g, '\b')      // backspace
+        .replace(/\\f/g, '\f')      // form feed
+        .replace(/\\v/g, '\v')      // vertical tab
+        .replace(/\\0/g, '\0')      // null character
+        .replace(/\\\\/g, '\\')     // escaped backslashes (must be last)
+        .replace(/\\x([0-9A-Fa-f]{2})/g, (match, hex) => String.fromCharCode(parseInt(hex, 16))) // hex escapes
+        .replace(/\\u([0-9A-Fa-f]{4})/g, (match, hex) => String.fromCharCode(parseInt(hex, 16))); // unicode escapes
+    }
+
     function unescapeJSON() {
-      button.textContent = "AI is working";
+      button.textContent = "AI is working ✨";
       button.classList.add("opacity-50");
       button.disabled = true;
       outputBox.value = "";
-      outputBox.classList.remove("bg-green-100", "text-green-700", "opacity-100");
+      outputBox.classList.remove("bg-green-100", "text-green-700", "bg-red-100", "text-red-700", "opacity-100");
+      copyBtn.classList.add("hidden");
+      clearOutputBtn.classList.add("hidden");
 
       setTimeout(() => {
         try {
-          const input = inputBox.value;
-          const unescaped = JSON.parse('"' + input.replace(/"/g, '\\"') + '"');
+          const input = inputBox.value.trim();
+          
+          if (input === "") {
+            throw new Error("Input is empty");
+          }
+
+          // Try multiple approaches to unescape
+          let unescaped = unescapeString(input);
+          
           outputBox.value = unescaped;
           outputBox.classList.add("bg-green-100", "text-green-700", "opacity-100");
           copyBtn.classList.remove("hidden");
+          clearOutputBtn.classList.remove("hidden");
           button.textContent = "✨ Unescape with AI";
         } catch (e) {
-          outputBox.value = "⚠️ Error: Invalid escaped JSON string";
+          outputBox.value = "⚠️ Error: Could not process the input\nDetails: " + e.message;
           outputBox.classList.add("bg-red-100", "text-red-700", "opacity-100");
+          clearOutputBtn.classList.remove("hidden");
           button.textContent = "✨ Unescape with AI";
         }
         button.classList.remove("opacity-50");
         button.disabled = false;
-      }, 1200); // fake AI delay
+      }, 800); // fake AI delay
     }
 
     function copyToClipboard() {
-      if (outputBox.value.trim() === "") return;
+      if (outputBox.value.trim() === "" || outputBox.value.startsWith("⚠️ Error")) return;
+      
       navigator.clipboard.writeText(outputBox.value).then(() => {
         copyBtn.classList.add("transform", "scale-105");
+        const originalText = copyBtn.textContent;
         copyBtn.textContent = "✅ Copied!";
+        
         setTimeout(() => {
-          copyBtn.textContent = "📋 Copy to Clipboard";
+          copyBtn.textContent = originalText;
           copyBtn.classList.remove("transform", "scale-105");
           toast.classList.add("show");
           setTimeout(() => toast.classList.remove("show"), 2000);
-        }, 1500);
+        }, 1000);
+      }).catch(err => {
+        alert("Failed to copy: " + err.message);
       });
     }
   </script>
 </body>
-</html>
+</html
