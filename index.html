@@ -135,6 +135,33 @@
         .replace(/\\u([0-9A-Fa-f]{4})/g, (match, hex) => String.fromCharCode(parseInt(hex, 16))); // unicode escapes
     }
 
+    function formatSQL(sql) {
+      // Check if it looks like SQL (contains common SQL keywords)
+      const sqlKeywords = /\b(SELECT|FROM|WHERE|JOIN|LEFT JOIN|RIGHT JOIN|INNER JOIN|OUTER JOIN|GROUP BY|ORDER BY|HAVING|UNION|UNION ALL|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b/i;
+      
+      if (!sqlKeywords.test(sql)) {
+        return sql; // Not SQL, return as is
+      }
+
+      // Format SQL with proper line breaks and indentation
+      let formatted = sql
+        // Add newlines before major clauses
+        .replace(/\s+(SELECT|FROM|WHERE|GROUP BY|ORDER BY|HAVING|LIMIT|OFFSET)\s+/gi, '\n$1 ')
+        .replace(/\s+(LEFT JOIN|RIGHT JOIN|INNER JOIN|OUTER JOIN|JOIN)\s+/gi, '\n  $1 ')
+        .replace(/\s+(AND|OR)\s+/gi, '\n  $1 ')
+        .replace(/\s+(UNION ALL|UNION)\s+/gi, '\n\n$1\n')
+        .replace(/\s+(INSERT INTO|UPDATE|DELETE FROM|CREATE TABLE|ALTER TABLE|DROP TABLE)\s+/gi, '\n$1 ')
+        // Clean up multiple spaces
+        .replace(/\s+/g, ' ')
+        // Clean up leading/trailing whitespace on each line
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n');
+
+      return formatted;
+    }
+
     function unescapeJSON() {
       button.textContent = "AI is working ✨";
       button.classList.add("opacity-50");
@@ -152,8 +179,11 @@
             throw new Error("Input is empty");
           }
 
-          // Try multiple approaches to unescape
+          // Unescape the string first
           let unescaped = unescapeString(input);
+          
+          // Format SQL if detected
+          unescaped = formatSQL(unescaped);
           
           outputBox.value = unescaped;
           outputBox.classList.add("bg-green-100", "text-green-700", "opacity-100");
@@ -191,4 +221,4 @@
     }
   </script>
 </body>
-</html
+</html>
